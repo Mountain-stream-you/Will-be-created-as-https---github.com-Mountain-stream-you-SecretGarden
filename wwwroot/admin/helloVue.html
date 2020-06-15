@@ -1,0 +1,22 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <script src="../../JS/vue.js"></script>
+</head>
+<body>
+    <div id="app">
+        <img :src="imgURL" alt=""/>
+    </div>
+    <script>
+        const app = new Vue({
+            el: '#app',
+            data: {
+                message:'你好啊',
+                imgURL:'http://img5.imgtn.bdimg.com/it/u=4247517097,3744570590&fm=26&gp=0.jpg'
+            }
+        })
+    </script>
+</body>
+</html>
