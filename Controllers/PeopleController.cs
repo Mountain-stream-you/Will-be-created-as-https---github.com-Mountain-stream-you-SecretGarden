@@ -100,7 +100,7 @@ namespace SecretGarden.Controllers
             //创建PeopleBo
             PeopleBo peopleBo = _boProvider.GetPeopleBo(releaseDto.PeopleId);
             peopleBo.CheckreleaseDto(releaseDto);
-            //添加约会记录
+             //添加约会记录
             peopleBo.AddRelease(releaseDto);
         }
 
