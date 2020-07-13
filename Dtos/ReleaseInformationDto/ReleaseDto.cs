@@ -40,9 +40,15 @@ namespace SecretGarden.Dtos.ReleaseInformationDto
         public String Email { get; set; }
 
         /// <summary>
+        /// 留言
+        /// </summary>
+        public string leaveMessage { get; set; }
+
+        /// <summary>
         /// 创建时间
         /// </summary>
-        [Column(TypeName = "DateTime")]
-        public DateTime CreateTime { get; set; } = DateTime.Now;
+        //[Column(TypeName = "DateTime")]
+        //public DateTime CreateTime { get; set; } = DateTime.Now;
     }
+
 }

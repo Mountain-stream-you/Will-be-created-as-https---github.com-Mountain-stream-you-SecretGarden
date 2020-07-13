@@ -43,6 +43,6 @@ namespace SecretGarden.Model
         /// 逻辑删除
         /// </summary>
         [Required]
-        public bool IsDeleted { get; set; } = false;
+        public bool IsDeleted { get; set; }
     }
     }

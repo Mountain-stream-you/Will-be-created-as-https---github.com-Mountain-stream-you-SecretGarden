@@ -2,7 +2,9 @@
 using Newtonsoft.Json;
 using PointsMall.Common;
 using SecretGarden.Bos;
+using SecretGarden.Dtos;
 using SecretGarden.Dtos.PeopleDto;
+using SecretGarden.Dtos.ReleaseInformationDto;
 using SecretGarden.Model;
 using System;
 using System.Collections;
@@ -40,10 +42,11 @@ namespace SecretGarden.Repositories
         /// 添加约会记录
         /// </summary>
         /// <param name="release"></param>
-        internal void addRelease(ReleaseInformation release)
+        internal bool addRelease(ReleaseInformation release)
         {
             _context.ReleaseInformations.Add(release);
             _context.SaveChanges();
+            return true;
         }
 
         /// <summary>
@@ -103,12 +106,23 @@ namespace SecretGarden.Repositories
             var result= _context.Peoples.Any(m=>m.NetName==peopleLoginDto.NetName && m.Password==peopleLoginDto.Password);
         if(result)
             {
-                return true;
+                var peopleId = _context.Peoples.Where(m => m.NetName == peopleLoginDto.NetName && m.Password == peopleLoginDto.Password).Select(r => r.Id).First();
+                return peopleId;
             }
             else
             {
                 return JsonConvert.SerializeObject(new ResultMsgDto() { Code = 500, Msg = $"用户名或密码输入不正确" });
             }
+        }
+
+        /// <summary>
+        /// 获取留言信息
+        /// </summary>
+        /// <returns></returns>
+        internal string[] GetReleas()
+        {
+            var result = _context.ReleaseInformations.Where(r => 1 == 1).Select(r=>r.LeaveMessage).ToArray();
+            return result;
         }
     }
 }

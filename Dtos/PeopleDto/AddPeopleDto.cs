@@ -12,6 +12,17 @@ namespace SecretGarden.PeopleDto
         /// 用户姓名
         /// </summary>
         public string Name { get; set; }
+        
+        /// <summary>
+        /// 用户名
+        /// </summary>
+        public string NetName { get; set; }
+
+        /// <summary>
+        /// 登录密码
+        /// </summary>
+        public string PassWord { get; set; }
+
 
         /// <summary>
         /// 性别类型
@@ -28,7 +39,7 @@ namespace SecretGarden.PeopleDto
         /// 证件类型
         /// </summary>
         [Required]
-        public string IdType { get; set; }
+        public string IdType { get; set; } = "身份证";
 
         /// <summary>
         /// 证件号码

@@ -12,7 +12,10 @@ namespace SecretGarden.Dtos.PeopleDto
     {
         public PeopleMapProfile()
         {
-            CreateMap<AddPeopleDto, People>();
+            CreateMap<AddPeopleDto, People>()
+              .ForMember(Target => Target.CreateTime, (map) => map.MapFrom(soure => DateTime.Now));
         }
     }
+
+ 
 }

@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace SecretGarden.Model
 {
+    /// <summary>
+    /// 约会记录表
+    /// </summary>
     public class ReleaseInformation :BaseModel
     {
         /// <summary>

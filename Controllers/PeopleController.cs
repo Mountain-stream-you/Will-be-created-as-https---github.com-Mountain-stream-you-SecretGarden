@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using PointsMall.Common;
 using SecretGarden.Bos;
 using SecretGarden.Dtos.PeopleDto;
 using SecretGarden.Dtos.ReleaseInformationDto;
@@ -27,12 +28,12 @@ namespace SecretGarden.Controllers
         /// </summary>
         /// <param name="addPeopleDto"></param>
         [HttpPost("add_People")]
-        public void AddPeople(AddPeopleDto addPeopleDto)
+        public IActionResult AddPeople(AddPeopleDto addPeopleDto)
         {
-           var adminUserBo= _boProvider.GetAdminUserBo();
+            var adminUserBo = _boProvider.GetAdminUserBo();
             adminUserBo.CheckPeopleDto(addPeopleDto);
             adminUserBo.AddPeople(addPeopleDto);
-            //adminUserBo.SetPayPassword()
+            return Ok(true);
         }
 
         /// <summary>
@@ -46,7 +47,7 @@ namespace SecretGarden.Controllers
             var adminUserBo = _boProvider.GetAdminUserBo();
             adminUserBo.CheckaddLoginDto(addLoginDto);
             var peopleBo = _boProvider.GetPeopleBo(addLoginDto.PeopleId);
-            var result= peopleBo.SetPayPassword(addLoginDto);
+            var result = peopleBo.SetPayPassword(addLoginDto);
             return Ok(result);
         }
 
@@ -59,6 +60,7 @@ namespace SecretGarden.Controllers
         public IActionResult ResetPasswordByEmail([FromRoute] string email)
         {
             var adminUserBo = _boProvider.GetAdminUserBo();
+            adminUserBo.checkEmail(email);
             var result = adminUserBo.ResetPasswordByEmail(email);
             return Ok(result);
         }
@@ -68,14 +70,16 @@ namespace SecretGarden.Controllers
         /// </summary>
         /// <param name="idCard"></param>
         /// <param name="VerificationCode"></param>
-        /// <param name="password"></param>
+        /// <param name="Newpassword"></param>
         /// <param name="email"></param>
         /// <returns></returns>
-        [HttpPost("Reset_Password/{idCard}")]
-        public IActionResult ResetPassword([FromRoute]string idCard, string VerificationCode,string password,string email)
+        [HttpPost("Reset_Password")]
+        public IActionResult ResetPassword(ResetPasswordsDto resetPasswordsDto)
         {
             var adminUserBo = _boProvider.GetAdminUserBo();
-            var result = adminUserBo.ResetPassword(idCard, VerificationCode, password,email);
+            if (string.IsNullOrEmpty(resetPasswordsDto.IdCard) || string.IsNullOrEmpty(resetPasswordsDto.VerificationCode) || string.IsNullOrEmpty(resetPasswordsDto.Newpassword) || string.IsNullOrEmpty(resetPasswordsDto.Email))
+                throw ExceptionHelper.InvalidArgumentException("必填字段记得要填啊");
+            var result = adminUserBo.ResetPassword(resetPasswordsDto.IdCard, resetPasswordsDto.VerificationCode, resetPasswordsDto.Newpassword, resetPasswordsDto.Email);
             return Ok(result);
         }
 
@@ -95,13 +99,25 @@ namespace SecretGarden.Controllers
         /// 添加约会记录
         /// </summary>
         [HttpPost("add_Release")]
-        public void AddRelease(ReleaseDto releaseDto)
+        public IActionResult AddRelease(ReleaseDto releaseDto)
         {
             //创建PeopleBo
             PeopleBo peopleBo = _boProvider.GetPeopleBo(releaseDto.PeopleId);
             peopleBo.CheckreleaseDto(releaseDto);
-             //添加约会记录
-            peopleBo.AddRelease(releaseDto);
+            //添加约会记录
+            var result = peopleBo.AddRelease(releaseDto);
+            return Ok(result);
+        }
+
+        /// <summary>
+        ///获取留言 
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("get_release")]
+        public IActionResult GetRelease()
+        {
+            var releases = _boProvider._peopleRepo.GetReleas();
+            return Ok(releases);
         }
 
         /// <summary>
@@ -117,7 +133,16 @@ namespace SecretGarden.Controllers
             return Ok();
         }
 
+        ///// <summary>
+        ///// 获取重置密码页面
+        ///// </summary>
+        ///// <returns></returns>
+        //public IActionResult GetForgotPassword()
+        //{
 
-        
+        //}
+
+
+
     }
 }

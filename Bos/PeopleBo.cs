@@ -26,11 +26,12 @@ namespace SecretGarden.Bos
         /// 创建约会记录
         /// </summary>
         /// <param name="releaseDto"></param>
-        internal void AddRelease(ReleaseDto releaseDto)
+        internal bool AddRelease(ReleaseDto releaseDto)
         {
             var release= _boProvider._mapper.Map<ReleaseInformation>(releaseDto);
             //添加约会记录
-            _boProvider._peopleRepo.addRelease(release);
+           var result=  _boProvider._peopleRepo.addRelease(release);
+            return result;
           //配对有缘人
 
         }

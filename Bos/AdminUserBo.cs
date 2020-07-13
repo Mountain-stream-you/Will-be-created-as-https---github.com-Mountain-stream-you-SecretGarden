@@ -41,12 +41,18 @@ namespace SecretGarden.Bos
         /// <param name="addPeopleDto"></param>
         internal void CheckPeopleDto(AddPeopleDto addPeopleDto)
         {
-            var addr = new MailAddress(addPeopleDto.Email);
-            if (addr.Address != addPeopleDto.Email)
-                throw ExceptionHelper.InvalidArgumentException($"请输入正确的邮箱地址");
+
+            if (_boProvider._context.Peoples.Any(m => m.NetName == addPeopleDto.NetName))
+                throw ExceptionHelper.InvalidArgumentException("该用户名已存在");
             var result = IDCardHelper.GetIsValid(addPeopleDto.PeopleIdNumber);
             if (result == false)
                 throw ExceptionHelper.InvalidArgumentException($"请输入合法的身份证");
+            if(_boProvider._context.Peoples.Any(m=>m.PeopleIdNumber==addPeopleDto.PeopleIdNumber))
+                throw ExceptionHelper.InvalidArgumentException($"该用户已经注册了");
+            var addr = new MailAddress(addPeopleDto.Email);
+            if (addr.Address != addPeopleDto.Email)
+                throw ExceptionHelper.InvalidArgumentException($"请输入正确的邮箱地址");
+
             var sex = IDCardHelper.GetGenderStr(addPeopleDto.PeopleIdNumber);
             if (int.Parse(sex) % 2 == 0)
             {
@@ -58,6 +64,16 @@ namespace SecretGarden.Bos
             }
             if (sex != addPeopleDto.Sex)
                 throw ExceptionHelper.InvalidArgumentException($"请输入正确的性别");
+        }
+
+        /// <summary>
+        /// 检查邮箱
+        /// </summary>
+        /// <param name="email"></param>
+        internal void checkEmail(string email)
+        {
+            var addr = new MailAddress(email);
+          
         }
 
         /// <summary>
@@ -109,7 +125,7 @@ namespace SecretGarden.Bos
         {
             if (peopleLoginDto.NetName.IsNullOrEmpty() || peopleLoginDto.Password.IsNullOrEmpty())
             {
-                return JsonConvert.SerializeObject(new ResultMsgDto() { Code = 500, Msg = $"用户名和密码不能为空" });
+                return JsonConvert.SerializeObject(new ResultMsgDto() { Code = 400, Msg = $"用户名和密码不能为空" });
             }
             else
             {
@@ -181,31 +197,38 @@ namespace SecretGarden.Bos
                     }
                     for (var i = arrylist.Count - 1; i >= 0; i--)
                     {
-
+                        //首先随机取出一个人
                         int random1 = new Random().Next(0, arrylist.Count - 1);
                         var people1 = (ReleaseInformation)arrylist[random1];
+                        //移除已经取出的人
                         arrylist.RemoveAt(random1);
+                        //再次随机取出第二人
                         int random2 = new Random().Next(0, arrylist.Count - 1);
                         var people2 = (ReleaseInformation)arrylist[random2];
                         //人员1邮件来源
                         var mailFron = new MailboxAddress("朝花夕拾", "1073308628@qq.com");
                         //替换邮件模板
                         var emailContent = _boProvider._context.MsgModels.FirstOrDefault(m => m.Status == (int)MsgModelEnum.配对成功邮件通知)?.Content;
-                        emailContent = emailContent.Replace("{PeopleName}", people1.People.Name)
+                        emailContent = emailContent.Replace("{PeopleName}", people1.People.NetName)
                             .Replace("{emailAdress}", people2.Email);
                         var mailTo= new MailboxAddress(people1.People.Name, people1.Email);
                         SendEmail(mailFron, mailTo, "配对成功邮件通知", emailContent).Wait();
 
-                        //人员1邮件来源
+                        //人员2邮件来源
                         var mailFron2 = new MailboxAddress("朝花夕拾", "1073308628@qq.com");
                         //替换邮件模板
                         var emailContent2 = _boProvider._context.MsgModels.FirstOrDefault(m => m.Status == (int)MsgModelEnum.配对成功邮件通知)?.Content;
-                        emailContent2 = emailContent2.Replace("{PeopleName}", people2.People.Name)
+                        emailContent2 = emailContent2.Replace("{PeopleName}", people2.People.NetName)
                             .Replace("{emailAdress}", people1.Email);
                         var mailTo2 = new MailboxAddress(people2.People.Name, people2.Email);
                         SendEmail(mailFron2, mailTo2, "配对成功邮件通知", emailContent2).Wait();
+                        //配对成功则软删除掉这两条记录
+                        people1.IsDeleted = true;
+                        people2.IsDeleted = true;
+                        _boProvider._context.SaveChanges();
+                        //移除第二个人
                         arrylist.RemoveAt(random2);
-
+                        //当记录不足2条是跳出循环
                         if (arrylist.Count <= 1)
                             break;
                     }
