@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>希望你不在是一个人</title>
+    <title>等你好久了</title>
     <link href="../layui/css/layui.css" rel="stylesheet" />
     <script src="../layui/layui.js"></script>
     <style type="text/css">
@@ -197,7 +197,6 @@
 
         </div>
         <div class="layui-form layui-fluid">
-
             <div class="layui-inline" style="left:1300px;top:-540px">
                 <marquee direction="up" height="70" scrollamount="1.5" onMouseOut="this.start()" onMouseOver="this.stop()">
                     <table width="100%" border="0" cellpadding="2" cellspacing="0">
@@ -218,12 +217,18 @@
             <div class="layui-form-item" position: absolute;>
                 <div class="layui-inline" style="left:1300px;top:-940px">
                     <audio controls style=" left:50%">
-                        <source src="BGM/xrzs.mp3" type="audio/mpeg">
+                        <source src="BGM/cfsi.mp3" type="audio/mpeg">
                         您的浏览器不支持 audio 元素。
                     </audio>
                 </div>
-                <div class="layui-inline" style="left:180px;top:-710px">
 
+
+                <div class="layui-inline" style="left:180px;top:-910px">
+                    <h1 style="color:#407882;top:-80px">来寻找和你在同一个城市的人吧！</h1>
+                </div>
+
+
+                <div class="layui-inline" style="left:-240px;top:-710px">
                     <label style="color:#fff">约定地点:</label>
                 </div>
                 <div class="layui-input-inline" style="left:800px;top:-700px">
@@ -235,7 +240,7 @@
                     <label style="color:#fff">联系邮箱:</label>
                 </div>
                 <div class="layui-input-inline" style="left:800px;top:-690px">
-                    <input type="text" id="email" lay-reqtext="邮箱必填哦" lay-verify="required" autocomplete="off" class="layui-input">
+                    <input type="text" id="email" lay-reqtext="邮箱必填哦" lay-verify="required" autocomplete="off" class="layui-input" placeholder="请填写联系邮箱">
                 </div>
             </div>
             <div class="layui-form-item" position: absolute;>
@@ -243,12 +248,12 @@
                     <label style="color:#fff">留言板:</label>
                 </div>
                 <div class="layui-input-inline" style="left:800px;top:-660px">
-                    <input type="text" id="mark"  autocomplete="off" class="layui-input" placeholder="填写留言可右侧展示">
+                    <input type="text" id="mark" autocomplete="off" class="layui-input" placeholder="填写留言可右侧展示">
                 </div>
             </div>
             <div class="layui-form-item" style="position: absolute;">
 
-                <div class="layui-inline" style="left:850px;top:-670px">
+                <div class="layui-inline" style="left:850px;top:-660px">
                     <button class="layui-btn" id="import" lay-submit lay-filter="import"><font size="3" color="black">确定</font></button>
                 </div>
             </div>
@@ -460,15 +465,19 @@
                     leaveMessage: $("#mark").val()
                 },
                 success: function (data) {
-                    if (data) {
+                    if (data.Code == 200) {
                         layer.msg('<span style="color:#19BD75">创建成功，请静候佳音</span>', { time: 2000 }, function () {
                             location.reload();
                         });
-                    } 
+                    }
+                    if (data.Code == 419) {
+                        layer.msg(data.Msg)
+                    }
+
 
                 },
                 error: function (data) {
-                    layer.msg(data.responseText);
+                    alert(data.responseText);
                 }
             });
         });

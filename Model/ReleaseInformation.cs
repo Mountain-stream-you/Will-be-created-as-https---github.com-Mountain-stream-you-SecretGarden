@@ -51,5 +51,17 @@ namespace SecretGarden.Model
         /// 留言
         /// </summary>
         public string LeaveMessage { get; set; }
+
+        /// <summary>
+        /// 验证码
+        /// </summary>
+        [StringLength(20)]
+        public string VerificationCode { get; set; }
+
+        /// <summary>
+        /// 验证码发送时间
+        /// </summary>
+        [Column(TypeName = "DateTime")]
+        public DateTime VerificationCodeISvalid { get; set; }
     }
 }

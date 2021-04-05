@@ -133,6 +133,13 @@ namespace SecretGarden.Migrations
                     b.Property<string>("Place")
                         .HasColumnType("longtext CHARACTER SET utf8mb4");
 
+                    b.Property<string>("VerificationCode")
+                        .HasColumnType("varchar(20) CHARACTER SET utf8mb4")
+                        .HasMaxLength(20);
+
+                    b.Property<DateTime>("VerificationCodeISvalid")
+                        .HasColumnType("DateTime");
+
                     b.HasKey("Id");
 
                     b.HasIndex("PeopleId");

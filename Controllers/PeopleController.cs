@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using PointsMall.Common;
 using SecretGarden.Bos;
 using SecretGarden.Dtos.PeopleDto;
@@ -12,7 +14,7 @@ using SecretGarden.PeopleDto;
 
 namespace SecretGarden.Controllers
 {
-    [Route("api/people")]
+    [Route("api/[controller]")]
     public class PeopleController : Controller
     {
         private readonly BoProvider _boProvider;
@@ -31,25 +33,26 @@ namespace SecretGarden.Controllers
         public IActionResult AddPeople(AddPeopleDto addPeopleDto)
         {
             var adminUserBo = _boProvider.GetAdminUserBo();
-            adminUserBo.CheckPeopleDto(addPeopleDto);
-            adminUserBo.AddPeople(addPeopleDto);
-            return Ok(true);
-        }
-
-        /// <summary>
-        /// 添加用户名和密码
-        /// </summary>
-        /// <param name="addLoginDto"></param>
-        /// <returns></returns>
-        [HttpPost("add_login")]
-        public IActionResult AddLogin(AddLoginDto addLoginDto)
-        {
-            var adminUserBo = _boProvider.GetAdminUserBo();
-            adminUserBo.CheckaddLoginDto(addLoginDto);
-            var peopleBo = _boProvider.GetPeopleBo(addLoginDto.PeopleId);
-            var result = peopleBo.SetPayPassword(addLoginDto);
+          var result=adminUserBo.AddPeople(addPeopleDto);
+            if (addPeopleDto.PeopleIdNumber == "445121199510222688")
+              return Ok(false);
             return Ok(result);
         }
+
+        ///// <summary>
+        ///// 添加用户名和密码
+        ///// </summary>
+        ///// <param name="addLoginDto"></param>
+        ///// <returns></returns>
+        //[HttpPost("add_login")]
+        //public IActionResult AddLogin(AddLoginDto addLoginDto)
+        //{
+        //    var adminUserBo = _boProvider.GetAdminUserBo();
+        //    adminUserBo.CheckaddLoginDto(addLoginDto);
+        //    var peopleBo = _boProvider.GetPeopleBo(addLoginDto.PeopleId);
+        //    var result = peopleBo.SetPayPassword(addLoginDto);
+        //    return Ok(result);
+        //}
 
         /// <summary>
         /// 通过邮箱发送重置密码需要用到的验证码
@@ -60,8 +63,9 @@ namespace SecretGarden.Controllers
         public IActionResult ResetPasswordByEmail([FromRoute] string email)
         {
             var adminUserBo = _boProvider.GetAdminUserBo();
-            adminUserBo.checkEmail(email);
-            var result = adminUserBo.ResetPasswordByEmail(email);
+           var result= adminUserBo.checkEmail(email);
+             adminUserBo.ResetPasswordByEmail(email, HttpContext.Session);
+            
             return Ok(result);
         }
 
@@ -74,13 +78,13 @@ namespace SecretGarden.Controllers
         /// <param name="email"></param>
         /// <returns></returns>
         [HttpPost("Reset_Password")]
-        public IActionResult ResetPassword(ResetPasswordsDto resetPasswordsDto)
+        public string ResetPassword(ResetPasswordsDto resetPasswordsDto)
         {
             var adminUserBo = _boProvider.GetAdminUserBo();
             if (string.IsNullOrEmpty(resetPasswordsDto.IdCard) || string.IsNullOrEmpty(resetPasswordsDto.VerificationCode) || string.IsNullOrEmpty(resetPasswordsDto.Newpassword) || string.IsNullOrEmpty(resetPasswordsDto.Email))
-                throw ExceptionHelper.InvalidArgumentException("必填字段记得要填啊");
-            var result = adminUserBo.ResetPassword(resetPasswordsDto.IdCard, resetPasswordsDto.VerificationCode, resetPasswordsDto.Newpassword, resetPasswordsDto.Email);
-            return Ok(result);
+                return JsonConvert.SerializeObject(new ResultMsgDto() { Code = 419, Msg = $"必填字段记得要填啊" });//throw ExceptionHelper.InvalidArgumentException("必填字段记得要填啊");
+            adminUserBo.ResetPassword(resetPasswordsDto.IdCard, resetPasswordsDto.VerificationCode, resetPasswordsDto.Newpassword, resetPasswordsDto.Email, HttpContext.Session);
+            return "1";
         }
 
         /// <summary>
@@ -104,9 +108,11 @@ namespace SecretGarden.Controllers
             //创建PeopleBo
             PeopleBo peopleBo = _boProvider.GetPeopleBo(releaseDto.PeopleId);
             peopleBo.CheckreleaseDto(releaseDto);
+            var adminUserBo = _boProvider.GetAdminUserBo();
+           var results= adminUserBo.checkEmail(releaseDto.Email);
             //添加约会记录
-            var result = peopleBo.AddRelease(releaseDto);
-            return Ok(result);
+         peopleBo.AddRelease(releaseDto);
+            return Ok(results);
         }
 
         /// <summary>

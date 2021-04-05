@@ -1,4 +1,5 @@
-﻿using SecretGarden.Model.Enum;
+﻿
+using SecretGarden.Model.Enum;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -27,6 +28,8 @@ namespace SecretGarden.Model
         [Column(TypeName = "enum('男','女')")]
         public string Sex { get; set; }
 
+      //  public GenderEnum SexEnum { get => System.Enum.Parse<GenderEnum>(Sex); }
+
         /// <summary>
         /// 登录密码
         /// </summary>
@@ -41,6 +44,7 @@ namespace SecretGarden.Model
         /// 证件号码
         /// </summary>
         [Required]
+        [StringLength(20)]
         [Column(TypeName = "enum('身份证')")]
         public string IdType{ get; set; }
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Caching.Distributed;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Distributed;
 using MimeKit;
 using Newtonsoft.Json;
 using NPOI.SS.Formula.Functions;
@@ -29,29 +30,37 @@ namespace SecretGarden.Bos
         /// 添加用户
         /// </summary>
         /// <param name="addPeopleDto"></param>
-        internal void AddPeople(AddPeopleDto addPeopleDto)
+        internal object AddPeople(AddPeopleDto addPeopleDto)
         {
-            var people = _boProvider._mapper.Map<People>(addPeopleDto);
-            _boProvider._peopleRepo.AddPeople(people);
+           var result= CheckPeopleDto(addPeopleDto);
+            return result;
         }
 
         /// <summary>
         /// 校验peopledto合法性
         /// </summary>
         /// <param name="addPeopleDto"></param>
-        internal void CheckPeopleDto(AddPeopleDto addPeopleDto)
+        internal object CheckPeopleDto(AddPeopleDto addPeopleDto)
         {
 
             if (_boProvider._context.Peoples.Any(m => m.NetName == addPeopleDto.NetName))
-                throw ExceptionHelper.InvalidArgumentException("该用户名已存在");
+                return JsonConvert.SerializeObject(new ResultMsgDto() { Code = 419, Msg = $"该用户名已存在" });//throw ExceptionHelper.InvalidArgumentException("该用户名已存在");
             var result = IDCardHelper.GetIsValid(addPeopleDto.PeopleIdNumber);
             if (result == false)
-                throw ExceptionHelper.InvalidArgumentException($"请输入合法的身份证");
-            if(_boProvider._context.Peoples.Any(m=>m.PeopleIdNumber==addPeopleDto.PeopleIdNumber))
-                throw ExceptionHelper.InvalidArgumentException($"该用户已经注册了");
-            var addr = new MailAddress(addPeopleDto.Email);
-            if (addr.Address != addPeopleDto.Email)
-                throw ExceptionHelper.InvalidArgumentException($"请输入正确的邮箱地址");
+                return JsonConvert.SerializeObject(new ResultMsgDto() { Code = 419, Msg = $"请输入合法的身份证" });//throw ExceptionHelper.InvalidArgumentException($"请输入合法的身份证");
+            if (_boProvider._context.Peoples.Any(m=>m.PeopleIdNumber==addPeopleDto.PeopleIdNumber))
+                return JsonConvert.SerializeObject(new ResultMsgDto() { Code = 419, Msg = $"该用户已经注册了" });//throw ExceptionHelper.InvalidArgumentException($"该用户已经注册了");
+            try
+            {
+                var addr = new MailAddress(addPeopleDto.Email);
+               //throw ExceptionHelper.InvalidArgumentException($"请输入正确的邮箱地址");
+
+            }
+            catch (Exception)
+            {
+
+                return JsonConvert.SerializeObject(new ResultMsgDto() { Code = 419, Msg = $"请输入正确的邮箱地址" });
+            }
 
             var sex = IDCardHelper.GetGenderStr(addPeopleDto.PeopleIdNumber);
             if (int.Parse(sex) % 2 == 0)
@@ -63,17 +72,33 @@ namespace SecretGarden.Bos
                 sex = "男";
             }
             if (sex != addPeopleDto.Sex)
-                throw ExceptionHelper.InvalidArgumentException($"请输入正确的性别");
+            { 
+                return JsonConvert.SerializeObject(new ResultMsgDto() { Code = 419, Msg = $"请输入正确的性别" });//throw ExceptionHelper.InvalidArgumentException($"请输入正确的性别");
+            }
+            var people = _boProvider._mapper.Map<People>(addPeopleDto);
+            _boProvider._peopleRepo.AddPeople(people);
+            return JsonConvert.SerializeObject(new ResultMsgDto() { Code = 200, Msg = $"正确" });
         }
 
         /// <summary>
         /// 检查邮箱
         /// </summary>
         /// <param name="email"></param>
-        internal void checkEmail(string email)
+        internal object checkEmail(string email)
         {
-            var addr = new MailAddress(email);
-          
+            try
+            {
+                var addr = new MailAddress(email);
+            }
+            catch (Exception e)
+            {
+
+                return JsonConvert.SerializeObject(new ResultMsgDto() { Code = 419, Msg = $"请输入正确的邮箱地址" });//throw ExceptionHelper.InvalidArgumentException($"请输入正确的邮箱地址");
+            }
+
+            return  JsonConvert.SerializeObject(new ResultMsgDto() { Code = 200, Msg = $"成功！" });
+
+
         }
 
         /// <summary>
@@ -91,10 +116,10 @@ namespace SecretGarden.Bos
         /// </summary>
         /// <param name="email"></param>
         /// <returns></returns>
-        internal bool ResetPasswordByEmail(string email)
+        internal void ResetPasswordByEmail(string email,ISession session)
         {
             var key = $"{nameof(ResetPasswordByEmail)}{email}";
-            var cacheStr = _boProvider._cache.GetString(key);
+           // var cacheStr = _boProvider._cache.GetString(key);
             //if(cacheStr.IsNullOrEmpty())
             //{
             //    var data = JsonConvert.DeserializeObject<string>(cacheStr);
@@ -111,8 +136,9 @@ namespace SecretGarden.Bos
 
             SendEmail(mailFron, mailTo, "重置邮件通知", emailContent).Wait();
             _logger.Debug($"邮件已发送给：{email}用户");
-            SetCache(key, VerificationCode, 23, 59, 59);
-            return true;
+            session.SetString(key, VerificationCode);
+            //SetCache(key, VerificationCode, 23, 59, 59);
+            //return true;
 
         }
 
@@ -142,18 +168,19 @@ namespace SecretGarden.Bos
         /// <param name="password"></param>
         /// <param name="email"></param>
         /// <returns></returns>
-        internal bool ResetPassword(string idCard,string verificationCode, string password,string email)
+        internal bool ResetPassword(string idCard,string verificationCode, string password,string email,ISession session)
         {
             var key = $"{nameof(ResetPasswordByEmail)}{email}";
-            var cacheStr = _boProvider._cache.GetString(key);
-            if(cacheStr.IsNullOrEmpty())
+            var code = session.GetString(key);
+             // var cacheStr = _boProvider._cache.GetString(key);
+            if(code.IsNullOrEmpty())
             {
                 throw ExceptionHelper.DataNotFoundException("验证码已经过期，请重新获取");
             }
             else
             {
-                var data = JsonConvert.DeserializeObject<string>(cacheStr);
-                if(data==verificationCode)
+               // var data = JsonConvert.DeserializeObject<string>(cacheStr);
+                if(code == verificationCode)
                 {
                     
                     var peopleBo = _boProvider.GetPeopleBoByIdCard(idCard);
@@ -183,8 +210,8 @@ namespace SecretGarden.Bos
           var result= _boProvider._peopleRepo.GetPeopleByCity();         
             foreach (var item in result)
             {
-                var data = item.Where(m => 1 == 1).ToList();
-                if (data.Count == 1)
+                var data = item.Where(m => m.IsDeleted==false).ToList();
+                if (data.Count == 1 || data.Count==0)
                 {
                     continue;
                 }

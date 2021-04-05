@@ -44,11 +44,6 @@ namespace SecretGarden.Dtos.ReleaseInformationDto
         /// </summary>
         public string leaveMessage { get; set; }
 
-        /// <summary>
-        /// 创建时间
-        /// </summary>
-        //[Column(TypeName = "DateTime")]
-        //public DateTime CreateTime { get; set; } = DateTime.Now;
     }
 
 }

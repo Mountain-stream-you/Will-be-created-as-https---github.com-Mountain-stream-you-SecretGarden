@@ -21,6 +21,8 @@ namespace SecretGarden
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
+                    //webBuilder.UseKestrel();
+                    webBuilder.UseUrls("http://*:5000");
                     webBuilder.UseStartup<Startup>().UseNLog();
                 });
     }

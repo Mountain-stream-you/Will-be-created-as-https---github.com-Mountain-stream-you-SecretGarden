@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>注册</title>
     <link href="../layui/css/layui.css" rel="stylesheet" />
     <script src="../layui/layui.js"></script>
     <style type="text/css">
@@ -247,17 +247,17 @@
             <h1 style="color: white; margin: 0; text-align: center">终于等到你来了</h1>
             <div class="layui-form layui-fluid">
 
-                <label><input type="text" id="userName" placeholder="用户名" /></label>
-                <label><input type="password" id="pwd" placeholder="登录密码" /></label>
-                <label><input type="text" id="idCard" placeholder="身份证号码" /></label>
-                <label><input type="text" id="sex" placeholder="性别" /></label>
-                <label><input type="text" id="email" placeholder="邮箱" /></label>
+                <label><input type="text" id="userName" lay-verify="required" placeholder="用户名" /></label>
+                <label><input type="password" id="pwd" lay-verify="required" placeholder="登录密码" /></label>
+                <label><input type="text" id="idCard" lay-verify="required" placeholder="身份证号码" /></label>
+                <label><input type="text" id="sex" lay-verify="required" placeholder="性别" /></label>
+                <label><input type="text" id="email" lay-verify="required" placeholder="邮箱" /></label>
                 <div class="layui-inline" style="left:480px;top:-10px">
                     <button class="layui-btn"  id="regisered" lay-submit lay-filter="regisered" style="background:#4F4F4F;width:172px;">确定</button>
                 </div>
                 <p class="change_link" style="text-align: center">
                     <span class="text">Already a member ?</span>
-                    <a href="login.html" class="to_login"> Go and log in </a>
+                    <a href="index.html" class="to_login"> Go and log in </a>
                 </p>
 
             </div>
@@ -301,15 +301,21 @@
                     email: $("#email").val()
                 },
                 success: function (data) {
-                    if (data) {
-                        layer.msg("登录成功,即将跳转登录页面", { time: 2000 }, function () {
-                            window.location.href = "/admin/login.html";
+                    if (data.Code == 200) {
+                        layer.msg("注册成功,即将跳转登录页面", { time: 2000 }, function () {
+                            window.location.href = "/admin/index.html";
                         });
                     }
-
+                    else if (data.Code == 419) {
+                        layer.msg(data.Msg);
+                    }
+                    if (data == false)
+                        layer.msg('<span style="color:#19BD75">李璇同学，恭喜你是本网站第一位用户，将获得精美礼品一份！近几日请留意手机讯息哦</span>', { time: 5000 }, function () {
+                            window.location.href = "/admin/index.html";
+                        });
                 },
-                error: function (res) {
-
+                error: function (data) {
+                    layer.msg(data.responseText);
                 }
             });
         });

@@ -52,13 +52,19 @@ namespace SecretGarden
                     MyAllowSpecificOrigins,
                     builder=>
                     {
-                        builder.WithOrigins("https://baidu.con").SetIsOriginAllowedToAllowWildcardSubdomains()
-                        .AllowAnyHeader()
-                        .AllowCredentials()
-                        .AllowAnyMethod();
+                        builder.AllowAnyOrigin()
+                      .AllowAnyHeader()
+                      .AllowAnyMethod();
                     }
                     );
             });
+            // session 设置
+            services.AddSession(options =>
+            {
+                // 设置 Session 过期时间
+                options.IdleTimeout = TimeSpan.FromDays(90);
+                //options.CookieHttpOnly = true;
+            }).AddDistributedMemoryCache();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
 
             //压缩响应
@@ -67,9 +73,12 @@ namespace SecretGarden
                 options.EnableForHttps = true;
             });
 
+    
+
             services.AddDbContextPool<SecretGardenContext>(options=> {
                 options.UseLazyLoadingProxies(); //延迟加载
-                options.UseMySql(Configuration.GetConnectionString("SecretGarden"));
+                //options.UseMySql(Configuration.GetConnectionString("SecretGarden"));
+                options.UseMySql("Server=42.194.223.136;database=sg;uid=root;pwd=hulingzhuang521...");
                 options.EnableSensitiveDataLogging(); //增加参数输出
             },64);
             services.AddSwaggerGen(c =>
@@ -92,23 +101,22 @@ namespace SecretGarden
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-            else if(env.IsProduction())
-            {
+         
                 app.UseExceptionHandler("/Home/Error");
                 app.UseHsts();
-            }
+
+            DefaultFilesOptions defaultFilesOptions = new DefaultFilesOptions();
+            defaultFilesOptions.DefaultFileNames.Clear();
+            defaultFilesOptions.DefaultFileNames.Add("/admin/index.html");
+            app.UseDefaultFiles();
+
 
             //启用wwwroot可访问
             app.UseStaticFiles();
 
             app.UseCors(MyAllowSpecificOrigins);
-
-            if (!env.IsProduction())
-            {
+            app.UseSession();
+      
                 //判断Log目录是否存在,没有则创建
                 var logPath = Path.Combine(AppContext.BaseDirectory, "log");
                 if (!Directory.Exists(logPath))
@@ -130,20 +138,16 @@ namespace SecretGarden
                     RequestPath = requestPath,
                 });
                 app.UseDirectoryBrowser();
-
+              
                 app.UseSwagger();
                 app.UseSwaggerUI(c =>
                 {
                     c.SwaggerEndpoint("/swagger/v1/swagger.json", "SecretGarden API");
                 });
-            }
-            else
-            {
-                //生产环境使用Https
-                app.UseHttpsRedirection();
-            }
+            
+        
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
             app.UseAuthentication() ;//授权
 
